@@ -1,0 +1,68 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", "Cascadia Mono", monospace;
+
+  /* Dark neutral palette — one restrained accent (indigo). */
+  --color-bg: #09090b;
+  --color-surface: #101014;
+  --color-surface-2: #17171d;
+  --color-border: #232329;
+  --color-border-strong: #36363f;
+  --color-text: #e4e4ea;
+  --color-muted: #9c9ca8;
+  --color-accent: #6366f1;
+  --color-accent-hover: #5558eb;
+  --color-accent-fg: #a5b4fc;
+  --color-accent-soft: rgb(99 102 241 / 0.13);
+  --color-danger: #f87171;
+
+  /* Subtle micro-animations. */
+  --animate-fade-in: fade-in 150ms ease-out both;
+  --animate-pop-in: pop-in 150ms ease-out both;
+  --animate-slide-up: slide-up 200ms ease-out both;
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+  }
+  @keyframes pop-in {
+    from { opacity: 0; transform: scale(0.96); }
+  }
+  @keyframes slide-up {
+    from { opacity: 0; transform: translateY(10px); }
+  }
+}
+
+/* Hide scrollbars on the horizontally-scrollable filter pills. */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+html {
+  color-scheme: dark;
+}
+
+::selection {
+  background: rgb(99 102 241 / 0.35);
+}
+
+/* Subtle dark scrollbars. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-strong) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--color-border-strong);
+  border-radius: 4px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}

@@ -1,0 +1,35 @@
+{
+  "name": "project-hub",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Simple internal Project Hub — one clean place to store, browse and access all projects.",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "dev:demo": "node scripts/demo.mjs",
+    "build": "next build",
+    "start": "next start",
+    "seed": "node scripts/seed.mjs",
+    "seed:force": "node scripts/seed.mjs --force"
+  },
+  "dependencies": {
+    "geist": "^1.7.2",
+    "minio": "^8.0.7",
+    "mongodb": "^6.21.0",
+    "next": "^15.5.24",
+    "react": "^19.0.8",
+    "react-dom": "^19.0.8",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/node": "^20.19.43",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.5",
+    "mongodb-memory-server": "^10.4.3",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^5.9.3"
+  }
+}
