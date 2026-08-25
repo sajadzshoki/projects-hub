@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { LogoutIcon, LogoMark, PlusIcon } from "@/components/icons";
 import { buttonClasses } from "@/components/ui/Button";
+import ThemeToggle from "@/components/ThemeToggle";
 
 /**
  * App header — logo on the left; search slot, "Add Project" and logout on the right.
@@ -24,6 +25,7 @@ export default function AppHeader({ search }: { search?: ReactNode }) {
         )}
 
         <div className="ml-auto flex items-center gap-1.5 sm:ml-0">
+          <ThemeToggle />
           <Link href="/projects/new" className={buttonClasses({ variant: "primary", size: "sm" })}>
             <PlusIcon className="h-4 w-4" />
             <span className="hidden sm:inline">Add Project</span>

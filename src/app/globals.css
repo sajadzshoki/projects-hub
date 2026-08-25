@@ -1,22 +1,52 @@
 @import "tailwindcss";
 
+:root {
+  /* Dark neutral palette — one restrained accent (indigo). */
+  --hub-bg: #09090b;
+  --hub-surface: #101014;
+  --hub-surface-2: #17171d;
+  --hub-border: #232329;
+  --hub-border-strong: #36363f;
+  --hub-text: #e4e4ea;
+  --hub-muted: #9c9ca8;
+  --hub-accent: #6366f1;
+  --hub-accent-hover: #5558eb;
+  --hub-accent-fg: #a5b4fc;
+  --hub-accent-soft: rgb(99 102 241 / 0.13);
+  --hub-danger: #f87171;
+}
+
+html.light {
+  --hub-bg: #f4f4f5;
+  --hub-surface: #ffffff;
+  --hub-surface-2: #ececee;
+  --hub-border: #e4e4e7;
+  --hub-border-strong: #d4d4d8;
+  --hub-text: #18181b;
+  --hub-muted: #71717a;
+  --hub-accent: #6366f1;
+  --hub-accent-hover: #4f46e5;
+  --hub-accent-fg: #4f46e5;
+  --hub-accent-soft: rgb(99 102 241 / 0.12);
+  --hub-danger: #dc2626;
+}
+
 @theme {
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", "Cascadia Mono", monospace;
 
-  /* Dark neutral palette — one restrained accent (indigo). */
-  --color-bg: #09090b;
-  --color-surface: #101014;
-  --color-surface-2: #17171d;
-  --color-border: #232329;
-  --color-border-strong: #36363f;
-  --color-text: #e4e4ea;
-  --color-muted: #9c9ca8;
-  --color-accent: #6366f1;
-  --color-accent-hover: #5558eb;
-  --color-accent-fg: #a5b4fc;
-  --color-accent-soft: rgb(99 102 241 / 0.13);
-  --color-danger: #f87171;
+  --color-bg: var(--hub-bg);
+  --color-surface: var(--hub-surface);
+  --color-surface-2: var(--hub-surface-2);
+  --color-border: var(--hub-border);
+  --color-border-strong: var(--hub-border-strong);
+  --color-text: var(--hub-text);
+  --color-muted: var(--hub-muted);
+  --color-accent: var(--hub-accent);
+  --color-accent-hover: var(--hub-accent-hover);
+  --color-accent-fg: var(--hub-accent-fg);
+  --color-accent-soft: var(--hub-accent-soft);
+  --color-danger: var(--hub-danger);
 
   /* Subtle micro-animations. */
   --animate-fade-in: fade-in 150ms ease-out both;
@@ -46,21 +76,25 @@ html {
   color-scheme: dark;
 }
 
+html.light {
+  color-scheme: light;
+}
+
 ::selection {
   background: rgb(99 102 241 / 0.35);
 }
 
-/* Subtle dark scrollbars. */
+/* Subtle scrollbars that follow the active theme. */
 * {
   scrollbar-width: thin;
-  scrollbar-color: var(--color-border-strong) transparent;
+  scrollbar-color: var(--hub-border-strong) transparent;
 }
 *::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 *::-webkit-scrollbar-thumb {
-  background: var(--color-border-strong);
+  background: var(--hub-border-strong);
   border-radius: 4px;
 }
 *::-webkit-scrollbar-track {

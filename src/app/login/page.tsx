@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { isAuthenticated } from "@/lib/auth";
 import LoginForm from "./LoginForm";
 import { LogoMark } from "@/components/icons";
+import ThemeToggle from "@/components/ThemeToggle";
 
 export const metadata = { title: "Log in" };
 
@@ -9,7 +10,10 @@ export default async function LoginPage() {
   if (await isAuthenticated()) redirect("/projects");
 
   return (
-    <main className="flex min-h-dvh items-center justify-center px-4">
+    <main className="relative flex min-h-dvh items-center justify-center px-4">
+      <div className="absolute right-4 top-4">
+        <ThemeToggle />
+      </div>
       <div className="w-full max-w-xs animate-fade-in">
         <div className="rounded-xl border border-border bg-surface px-6 py-8">
           <div className="flex flex-col items-center gap-3 text-center">

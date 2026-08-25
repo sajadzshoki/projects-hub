@@ -2,7 +2,7 @@
 
 A small, polished **internal Project Hub** — one clean place to store, browse, search, filter and open every project. Built for two people, not a thousand. Deliberately simple.
 
-![stack](https://img.shields.io/badge/Next.js_15-TypeScript-blue) — MongoDB · Tailwind CSS v4 · Dark mode only
+![stack](https://img.shields.io/badge/Next.js_15-TypeScript-blue) — MongoDB · Tailwind CSS v4 · Dark & light mode
 
 ## What it does
 
