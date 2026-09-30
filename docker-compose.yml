@@ -1,0 +1,76 @@
+services:
+  app:
+    image: node:22
+
+    working_dir: /app
+
+    command: sh -c "npm ci && npm run build && node .output/server/index.mjs"
+
+    ports:
+      - "3000:3000"
+
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: 3000
+
+      PROJECT_HUB_PASSWORD: ${PROJECT_HUB_PASSWORD:-1111}
+      SESSION_SECRET: ${SESSION_SECRET:-}
+
+      MONGODB_URI: mongodb://${MONGO_USER:-projecthub}:${MONGO_PASSWORD:-projecthub}@mongo:27017/project-hub?authSource=admin
+
+      MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-5}
+      LOCAL_UPLOAD_DIR: /data/uploads
+
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT:-}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-}
+      MINIO_BUCKET: ${MINIO_BUCKET:-}
+      MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:-}
+
+    volumes:
+      - .:/app
+      - uploads:/data/uploads
+
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+    restart: unless-stopped
+
+  mongo:
+    image: mongo:8
+
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-projecthub}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-projecthub}
+      MONGO_INITDB_DATABASE: project-hub
+
+    volumes:
+      - mongo-data:/data/db
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mongosh",
+          "--quiet",
+          "--username",
+          "${MONGO_USER:-projecthub}",
+          "--password",
+          "${MONGO_PASSWORD:-projecthub}",
+          "--authenticationDatabase",
+          "admin",
+          "--eval",
+          "db.adminCommand('ping')"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+    restart: unless-stopped
+
+volumes:
+  mongo-data:
+  uploads:
