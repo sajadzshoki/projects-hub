@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import type { Project } from "@/lib/types";
+import type { ChecklistItem, Project } from "@/lib/types";
 import AppHeader from "@/components/AppHeader";
 import ProjectCard from "@/components/projects/ProjectCard";
 import ProjectFilters, { type QuickFilter } from "@/components/projects/ProjectFilters";
@@ -76,6 +76,7 @@ export default function ProjectBrowser({ initialProjects }: { initialProjects: P
           project.projectType,
           project.status,
           project.tags.join(" "),
+          project.checklist.map((item) => item.text).join(" "),
         ]
           .join(" ")
           .toLowerCase();
@@ -89,6 +90,12 @@ export default function ProjectBrowser({ initialProjects }: { initialProjects: P
   function handleFavoriteChange(id: string, favorite: boolean) {
     setProjects((previous) =>
       previous.map((project) => (project.id === id ? { ...project, favorite } : project))
+    );
+  }
+
+  function handleChecklistChange(id: string, checklist: ChecklistItem[]) {
+    setProjects((previous) =>
+      previous.map((project) => (project.id === id ? { ...project, checklist } : project))
     );
   }
 
@@ -144,6 +151,7 @@ export default function ProjectBrowser({ initialProjects }: { initialProjects: P
                   key={project.id}
                   project={project}
                   onFavoriteChange={handleFavoriteChange}
+                  onChecklistChange={handleChecklistChange}
                   onDelete={setDeleteTarget}
                 />
               ))}

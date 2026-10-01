@@ -1,17 +1,16 @@
 services:
   app:
     image: node:22
-
     working_dir: /app
 
-    command: sh -c "npm ci && npm run build && node .output/server/index.mjs"
+    command: sh -c "corepack enable && npm install && npm run build && npm start"
 
     ports:
       - "3000:3000"
 
     environment:
       NODE_ENV: production
-      HOST: 0.0.0.0
+      HOSTNAME: 0.0.0.0
       PORT: 3000
 
       PROJECT_HUB_PASSWORD: ${PROJECT_HUB_PASSWORD:-1111}
@@ -22,21 +21,89 @@ services:
       MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-5}
       LOCAL_UPLOAD_DIR: /data/uploads
 
-      MINIO_ENDPOINT: ${MINIO_ENDPOINT:-}
-      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-}
-      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-}
-      MINIO_BUCKET: ${MINIO_BUCKET:-}
+      # Must include scheme (http://). Parsed with new URL() in the app.
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT:-http://minio:9000}
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      MINIO_BUCKET: ${MINIO_BUCKET:-projects-hub}
+      # Public base URL browsers use for cover images. Must be non-empty for MinIO mode.
+      # The app appends /covers/<file>, so this value must already include the bucket.
+      # Example: http://188.121.107.118:9000/projects-hub
       MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:-}
 
     volumes:
-      - .:/app
+      - ${APP_DIR:-.}:/app
+      - node_modules:/app/node_modules
       - uploads:/data/uploads
 
     depends_on:
       mongo:
         condition: service_healthy
+      minio:
+        condition: service_started
+      minio-init:
+        condition: service_completed_successfully
+
+    networks:
+      - default
+      - main
 
     restart: unless-stopped
+
+  # Official minio/minio was removed from Docker Hub (2026).
+  # pgsty/silo is a drop-in S3-compatible replacement (same MINIO_* env + API).
+  minio:
+    image: docker.io/pgsty/silo:latest
+
+    command: server /data --console-address ":9001"
+
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+
+    volumes:
+      - minio-data:/data
+
+    # Port 9000 is the S3 API. Browsers load cover images from this port.
+    ports:
+      - "9000:9000"
+
+    healthcheck:
+      test: ["CMD", "silo", "healthcheck", "ready"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
+
+    networks:
+      - default
+      - main
+
+    restart: unless-stopped
+
+  # Waits for object storage, creates the bucket, allows public download of objects.
+  # The app does not create the bucket itself. Client binary in Silo image is "mcli".
+  minio-init:
+    image: docker.io/pgsty/silo:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        set -e
+        mcli alias set local http://minio:9000 "$$MINIO_ROOT_USER" "$$MINIO_ROOT_PASSWORD"
+        mcli mb --ignore-existing "local/$$MINIO_BUCKET"
+        mcli anonymous set download "local/$$MINIO_BUCKET"
+        echo "Bucket $$MINIO_BUCKET is ready"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      MINIO_BUCKET: ${MINIO_BUCKET:-projects-hub}
+    networks:
+      - default
+    restart: "no"
 
   mongo:
     image: mongo:8
@@ -48,6 +115,10 @@ services:
 
     volumes:
       - mongo-data:/data/db
+
+    # Only the server itself can reach Mongo. Local dev uses an SSH tunnel to this port.
+    ports:
+      - "127.0.0.1:27017:27017"
 
     healthcheck:
       test:
@@ -69,8 +140,24 @@ services:
       retries: 20
       start_period: 20s
 
+    networks:
+      - default
+
     restart: unless-stopped
 
 volumes:
   mongo-data:
+    name: projects-hub_mongo-data
+
   uploads:
+    name: projects-hub_uploads
+
+  minio-data:
+    name: projects-hub_minio-data
+
+  node_modules:
+
+networks:
+  main:
+    external: true
+    name: main

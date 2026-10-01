@@ -1,6 +1,6 @@
 import { ObjectId, type Collection, type WithId } from "mongodb";
 import { getDb } from "./db";
-import type { Project } from "./types";
+import type { ChecklistItem, Project } from "./types";
 import type { ProjectInput } from "./validation";
 import type { ProjectStatus, ProjectType } from "./constants";
 
@@ -16,6 +16,7 @@ export interface ProjectDoc {
   status: ProjectStatus;
   projectType: ProjectType;
   tags: string[];
+  checklist?: ChecklistItem[];
   favorite: boolean;
   notes?: string;
   aiDocumentation?: string;
@@ -44,6 +45,7 @@ function serialize(doc: WithId<ProjectDoc>): Project {
     status: doc.status,
     projectType: doc.projectType,
     tags: doc.tags ?? [],
+    checklist: doc.checklist ?? [],
     favorite: Boolean(doc.favorite),
     notes: doc.notes ?? "",
     aiDocumentation: doc.aiDocumentation ?? "",
@@ -94,6 +96,26 @@ export async function deleteProject(id: string): Promise<boolean> {
   if (!isValidId(id)) return false;
   const result = await (await projects()).deleteOne({ _id: new ObjectId(id) });
   return result.deletedCount > 0;
+}
+
+/**
+ * Replaces a project's checklist without touching `updatedAt`, so ticking items
+ * does not reshuffle the "recently updated" sort while you are working the list.
+ * Returns the stored list, or null when the project does not exist.
+ */
+export async function replaceChecklist(
+  id: string,
+  checklist: ChecklistItem[]
+): Promise<ChecklistItem[] | null> {
+  if (!isValidId(id)) return null;
+  const result = await (
+    await projects()
+  ).findOneAndUpdate(
+    { _id: new ObjectId(id) },
+    { $set: { checklist } },
+    { returnDocument: "after" }
+  );
+  return result ? (result.checklist ?? []) : null;
 }
 
 /** Toggles favorite, returns the new value (or null when the project does not exist). */

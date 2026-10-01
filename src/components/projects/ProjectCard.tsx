@@ -1,8 +1,9 @@
 import Link from "next/link";
-import type { Project } from "@/lib/types";
+import type { ChecklistItem, Project } from "@/lib/types";
 import { cn, formatRelativeDate } from "@/lib/utils";
 import CoverImage from "@/components/projects/CoverImage";
 import FavoriteButton from "@/components/projects/FavoriteButton";
+import ProjectChecklist from "@/components/projects/ProjectChecklist";
 import StatusBadge from "@/components/projects/StatusBadge";
 import TagList from "@/components/projects/TagList";
 import { IconButton } from "@/components/ui/Button";
@@ -17,11 +18,17 @@ import {
 interface ProjectCardProps {
   project: Project;
   onFavoriteChange: (id: string, favorite: boolean) => void;
+  onChecklistChange: (id: string, checklist: ChecklistItem[]) => void;
   onDelete: (project: Project) => void;
 }
 
 /** One project in the grid — cover, meta, tags and quick actions. */
-export default function ProjectCard({ project, onFavoriteChange, onDelete }: ProjectCardProps) {
+export default function ProjectCard({
+  project,
+  onFavoriteChange,
+  onChecklistChange,
+  onDelete,
+}: ProjectCardProps) {
   const detailHref = `/projects/${project.id}`;
 
   return (
@@ -64,6 +71,14 @@ export default function ProjectCard({ project, onFavoriteChange, onDelete }: Pro
         </div>
 
         <TagList tags={project.tags} max={3} />
+
+        <ProjectChecklist
+          persist="live"
+          variant="card"
+          projectId={project.id}
+          items={project.checklist}
+          onChange={(checklist) => onChecklistChange(project.id, checklist)}
+        />
 
         <div className="mt-auto flex items-center justify-between gap-2 border-t border-border pt-2.5">
           <span className="text-[11px] text-muted" suppressHydrationWarning>

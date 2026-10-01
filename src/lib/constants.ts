@@ -36,6 +36,10 @@ export const TAG_SUGGESTIONS = [
 /** Max tags per project (validated server-side too). */
 export const MAX_TAGS = 10;
 
+/** Max checklist items per project, and max length of one item. */
+export const MAX_CHECKLIST_ITEMS = 30;
+export const MAX_CHECKLIST_TEXT = 200;
+
 /** Max cover image size in MB (the API reads MAX_UPLOAD_MB env, this is the client-side hint). */
 export const MAX_UPLOAD_MB = 5;
 

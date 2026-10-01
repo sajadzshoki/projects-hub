@@ -3,7 +3,7 @@
 import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { Project } from "@/lib/types";
+import type { ChecklistItem, Project } from "@/lib/types";
 import {
   DEFAULT_STATUS,
   DEFAULT_TYPE,
@@ -18,6 +18,7 @@ import { Button, buttonClasses } from "@/components/ui/Button";
 import { Field, Input, Select, Textarea } from "@/components/ui/Field";
 import { PlusIcon, Spinner, StarIcon, UploadIcon, XIcon } from "@/components/icons";
 import CoverImage from "@/components/projects/CoverImage";
+import ProjectChecklist from "@/components/projects/ProjectChecklist";
 
 interface ProjectFormProps {
   mode: "create" | "edit";
@@ -38,6 +39,7 @@ export default function ProjectForm({ mode, initial }: ProjectFormProps) {
   const [status, setStatus] = useState(initial?.status ?? DEFAULT_STATUS);
   const [projectType, setProjectType] = useState(initial?.projectType ?? DEFAULT_TYPE);
   const [tags, setTags] = useState<string[]>(initial?.tags ?? []);
+  const [checklist, setChecklist] = useState<ChecklistItem[]>(initial?.checklist ?? []);
   const [tagInput, setTagInput] = useState("");
   const [favorite, setFavorite] = useState(initial?.favorite ?? false);
   const [notes, setNotes] = useState(initial?.notes ?? "");
@@ -111,6 +113,9 @@ export default function ProjectForm({ mode, initial }: ProjectFormProps) {
       status,
       projectType,
       tags,
+      checklist: checklist
+        .map((item) => ({ ...item, text: item.text.trim() }))
+        .filter((item) => item.text.length > 0),
       favorite,
       notes: notes.trim(),
       aiDocumentation: aiDocumentation.trim(),
@@ -361,6 +366,19 @@ export default function ProjectForm({ mode, initial }: ProjectFormProps) {
           </span>
           Mark as favorite
         </label>
+      </section>
+
+      {/* ── Checklist ──────────────────────────────────────────────────────── */}
+      <section className="space-y-4">
+        <ProjectChecklist
+          persist="draft"
+          items={checklist}
+          onChange={setChecklist}
+          error={
+            errors.checklist ??
+            Object.entries(errors).find(([key]) => key.startsWith("checklist."))?.[1]
+          }
+        />
       </section>
 
       {/* ── Notes ──────────────────────────────────────────────────────────── */}

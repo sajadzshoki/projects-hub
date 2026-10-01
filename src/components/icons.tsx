@@ -53,6 +53,16 @@ export const CheckIcon = (p: IconProps) => (
   </Icon>
 );
 
+export const ListChecksIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="m3 17 2 2 4-4" />
+    <path d="m3 7 2 2 4-4" />
+    <path d="M13 6h8" />
+    <path d="M13 12h8" />
+    <path d="M13 18h8" />
+  </Icon>
+);
+
 export const CopyIcon = (p: IconProps) => (
   <Icon {...p}>
     <rect width="14" height="14" x="8" y="8" rx="2" />

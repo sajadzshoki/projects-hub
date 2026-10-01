@@ -18,5 +18,11 @@ next-env.d.ts
 .env.local
 .env.*.local
 
+# local deploy notes; contains the server password
+DEPLOY.md
+
 # local file uploads (fallback image storage)
 /.data
+
+
+graphify-out/

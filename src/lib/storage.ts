@@ -88,9 +88,10 @@ async function saveLocally(name: string, buffer: Buffer): Promise<string> {
 
 async function saveToMinio(name: string, buffer: Buffer, ext: string): Promise<string> {
   const endpoint = new URL(process.env.MINIO_ENDPOINT!);
-  const { default: Minio } = await import("minio");
+  // minio has no default export; Next's dynamic import must use named Client.
+  const { Client } = await import("minio");
 
-  const client = new Minio.Client({
+  const client = new Client({
     endPoint: endpoint.hostname,
     port: Number(endpoint.port) || (endpoint.protocol === "https:" ? 443 : 80),
     useSSL: endpoint.protocol === "https:",

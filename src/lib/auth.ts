@@ -1,5 +1,5 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { NextResponse } from "next/server";
 
@@ -61,14 +61,29 @@ export function verifySessionToken(token: string | null | undefined): boolean {
   return safeEqual(parts[2], sign(`v1.${parts[1]}`));
 }
 
-export function sessionCookieOptions() {
+export function sessionCookieOptions(secure: boolean) {
   return {
     httpOnly: true,
     sameSite: "lax" as const,
-    secure: process.env.NODE_ENV === "production",
+    secure,
     path: "/",
     maxAge: SESSION_TTL_SECONDS,
   };
+}
+
+/**
+ * Browsers drop a Secure cookie on plain HTTP, so production must not force it.
+ * COOKIE_SECURE=true/false overrides. Otherwise follow X-Forwarded-Proto, which
+ * nginx sets when TLS is terminated in front of the app.
+ */
+export async function sessionCookieSecure(): Promise<boolean> {
+  const flag = process.env.COOKIE_SECURE?.trim().toLowerCase();
+  if (flag === "true" || flag === "1") return true;
+  if (flag === "false" || flag === "0") return false;
+
+  const headerList = await headers();
+  const proto = headerList.get("x-forwarded-proto")?.split(",")[0]?.trim().toLowerCase();
+  return proto === "https";
 }
 
 export async function isAuthenticated(): Promise<boolean> {
@@ -89,5 +104,5 @@ export async function requireApiAuth(): Promise<NextResponse | null> {
 
 export async function createSession(): Promise<void> {
   const store = await cookies();
-  store.set(SESSION_COOKIE, createSessionToken(), sessionCookieOptions());
+  store.set(SESSION_COOKIE, createSessionToken(), sessionCookieOptions(await sessionCookieSecure()));
 }

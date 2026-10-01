@@ -6,6 +6,7 @@ import { getProject } from "@/lib/projects";
 import { formatDate, formatRelativeDate } from "@/lib/utils";
 import AppHeader from "@/components/AppHeader";
 import CoverImage from "@/components/projects/CoverImage";
+import ProjectChecklist from "@/components/projects/ProjectChecklist";
 import FavoriteButton from "@/components/projects/FavoriteButton";
 import StatusBadge from "@/components/projects/StatusBadge";
 import TagList from "@/components/projects/TagList";
@@ -135,6 +136,15 @@ export default async function ProjectDetailPage({ params }: PageProps) {
             </p>
 
             <TagList tags={project.tags} />
+
+            <div className="border-t border-border pt-5">
+              <ProjectChecklist
+                persist="live"
+                variant="page"
+                projectId={project.id}
+                items={project.checklist}
+              />
+            </div>
 
             {/* ── Notes ────────────────────────────────────────────────────── */}
             {project.notes && (

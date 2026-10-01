@@ -1,5 +1,13 @@
 import { z, type ZodError } from "zod";
-import { DEFAULT_STATUS, DEFAULT_TYPE, MAX_TAGS, PROJECT_TYPES, STATUSES } from "./constants";
+import {
+  DEFAULT_STATUS,
+  DEFAULT_TYPE,
+  MAX_CHECKLIST_ITEMS,
+  MAX_CHECKLIST_TEXT,
+  MAX_TAGS,
+  PROJECT_TYPES,
+  STATUSES,
+} from "./constants";
 
 /**
  * Server-side validation — never trust the client alone.
@@ -42,6 +50,38 @@ const optionalImageUrl = z.preprocess(
     .optional()
 );
 
+const checklistItemSchema = z.object({
+  id: z.string().trim().uuid("Invalid checklist item."),
+  text: z
+    .string()
+    .trim()
+    .min(1, "Checklist items cannot be empty.")
+    .max(MAX_CHECKLIST_TEXT, `Checklist item is too long (max ${MAX_CHECKLIST_TEXT}).`),
+  done: z.boolean(),
+});
+
+export const checklistSchema = z
+  .array(checklistItemSchema)
+  .max(MAX_CHECKLIST_ITEMS, `Too many checklist items (max ${MAX_CHECKLIST_ITEMS}).`)
+  .superRefine((items, ctx) => {
+    const seen = new Set<string>();
+    items.forEach((item, index) => {
+      if (seen.has(item.id)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Duplicate checklist item.",
+          path: [index, "id"],
+        });
+      }
+      seen.add(item.id);
+    });
+  });
+
+/** Body for PATCH /api/projects/[id]/checklist — updates only the list. */
+export const checklistUpdateSchema = z.object({
+  checklist: checklistSchema,
+});
+
 export const projectSchema = z.object({
   title: z.string().trim().min(1, "Title is required.").max(120, "Title is too long (max 120)."),
   description: z
@@ -59,6 +99,7 @@ export const projectSchema = z.object({
     .array(z.string().trim().min(1, "Tags cannot be empty.").max(30, "Tags must be 30 chars or less."))
     .max(MAX_TAGS, `Too many tags (max ${MAX_TAGS}).`)
     .default([]),
+  checklist: checklistSchema.default([]),
   favorite: z.boolean().default(false),
   notes: z.string().trim().max(5000, "Notes are too long (max 5000).").default(""),
   aiDocumentation: z
