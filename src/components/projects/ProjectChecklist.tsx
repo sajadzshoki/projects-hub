@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { ChecklistItem } from "@/lib/types";
 import { MAX_CHECKLIST_ITEMS, MAX_CHECKLIST_TEXT } from "@/lib/constants";
-import { cn } from "@/lib/utils";
+import { cn, createId } from "@/lib/utils";
 import { CheckIcon, ListChecksIcon, PlusIcon, XIcon } from "@/components/icons";
 
 interface LiveProps {
@@ -126,7 +126,7 @@ function ChecklistView({
     const text = draft.trim();
     if (!text || atLimit) return;
     setDraft("");
-    onCommit([...items, { id: crypto.randomUUID(), text, done: false }]);
+    onCommit([...items, { id: createId(), text, done: false }]);
   }
 
   function toggle(id: string) {
