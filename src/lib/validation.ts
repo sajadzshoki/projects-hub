@@ -87,8 +87,8 @@ export const projectSchema = z.object({
   description: z
     .string()
     .trim()
-    .min(1, "Description is required.")
-    .max(2000, "Description is too long (max 2000)."),
+    .max(2000, "Description is too long (max 2000).")
+    .default(""),
   coverImage: optionalImageUrl,
   projectUrl: optionalHttpUrl,
   githubUrl: optionalHttpUrl,

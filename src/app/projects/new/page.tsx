@@ -22,7 +22,7 @@ export default async function NewProjectPage() {
         </Link>
         <h1 className="mt-4 text-lg font-semibold tracking-tight">Add project</h1>
         <p className="mt-1 text-xs text-muted">
-          Only the title and description are required — everything else can be filled in later.
+          Only the title is required — everything else can be filled in later.
         </p>
         <div className="mt-6">
           <ProjectForm mode="create" />

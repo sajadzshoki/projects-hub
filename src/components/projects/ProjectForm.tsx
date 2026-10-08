@@ -3,6 +3,7 @@
 import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { defaultChecklist } from "@/lib/checklist";
 import type { ChecklistItem, Project } from "@/lib/types";
 import {
   DEFAULT_STATUS,
@@ -39,7 +40,9 @@ export default function ProjectForm({ mode, initial }: ProjectFormProps) {
   const [status, setStatus] = useState(initial?.status ?? DEFAULT_STATUS);
   const [projectType, setProjectType] = useState(initial?.projectType ?? DEFAULT_TYPE);
   const [tags, setTags] = useState<string[]>(initial?.tags ?? []);
-  const [checklist, setChecklist] = useState<ChecklistItem[]>(initial?.checklist ?? []);
+  const [checklist, setChecklist] = useState<ChecklistItem[]>(() =>
+    initial ? initial.checklist : defaultChecklist()
+  );
   const [tagInput, setTagInput] = useState("");
   const [favorite, setFavorite] = useState(initial?.favorite ?? false);
   const [notes, setNotes] = useState(initial?.notes ?? "");
@@ -122,6 +125,18 @@ export default function ProjectForm({ mode, initial }: ProjectFormProps) {
       aiDocumentation: aiDocumentation.trim(),
     };
 
+    if (!payload.title) {
+      setErrors({ title: "Title is required." });
+      setFormError("Title is required.");
+      setSaving(false);
+      requestAnimationFrame(() => {
+        document
+          .querySelector("[data-invalid='true']")
+          ?.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+      return;
+    }
+
     try {
       const response = await fetch(
         mode === "create" ? "/api/projects" : `/api/projects/${initial!.id}`,
@@ -142,7 +157,14 @@ export default function ProjectForm({ mode, initial }: ProjectFormProps) {
         error?: string;
         fields?: Record<string, string>;
       };
-      if (data.fields) setErrors(data.fields);
+      if (data.fields) {
+        setErrors(data.fields);
+        requestAnimationFrame(() => {
+          document
+            .querySelector("[data-invalid='true']")
+            ?.scrollIntoView({ behavior: "smooth", block: "center" });
+        });
+      }
       setFormError(data.error || "Could not save the project. Please try again.");
     } catch {
       setFormError("Network error — could not reach the server.");
@@ -155,7 +177,7 @@ export default function ProjectForm({ mode, initial }: ProjectFormProps) {
     "font-mono text-[11px] font-medium uppercase tracking-widest text-muted";
 
   return (
-    <form onSubmit={onSubmit} className="space-y-8">
+    <form onSubmit={onSubmit} noValidate className="space-y-8">
       {/* ── Basics ─────────────────────────────────────────────────────────── */}
       <section className="space-y-4">
         <h2 className={sectionHeading}>Basics</h2>
@@ -168,14 +190,13 @@ export default function ProjectForm({ mode, initial }: ProjectFormProps) {
             required
           />
         </Field>
-        <Field label="Description" required error={errors.description}>
+        <Field label="Description" hint="Optional" error={errors.description}>
           <Textarea
             value={description}
             onChange={(event) => setDescription(event.target.value)}
             placeholder="A short summary of what this project is."
             rows={3}
             maxLength={2000}
-            required
           />
         </Field>
       </section>
@@ -422,21 +443,23 @@ export default function ProjectForm({ mode, initial }: ProjectFormProps) {
         </Field>
       </section>
 
-      {formError && (
-        <p className="rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2.5 text-sm text-red-300">
-          {formError}
-        </p>
-      )}
-
-      {/* ── Actions ────────────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-end gap-2 border-t border-border pt-5">
-        <Link href={cancelHref} className={buttonClasses({ variant: "ghost" })}>
-          Cancel
-        </Link>
-        <Button type="submit" variant="primary" disabled={saving || uploading}>
-          {saving ? <Spinner className="h-3.5 w-3.5" /> : <PlusIcon className="h-3.5 w-3.5" />}
-          {saving ? "Saving…" : mode === "create" ? "Add Project" : "Save Changes"}
-        </Button>
+      {/* Stays on screen so Save is reachable on the long form, and so a
+          validation error is visible instead of the click appearing to do nothing. */}
+      <div className="sticky bottom-0 z-30 -mx-4 space-y-3 border-t border-border bg-bg/95 px-4 py-3 backdrop-blur-sm md:-mx-6 md:px-6">
+        {formError && (
+          <p className="rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2.5 text-sm text-red-300">
+            {formError}
+          </p>
+        )}
+        <div className="flex items-center justify-end gap-2">
+          <Link href={cancelHref} className={buttonClasses({ variant: "ghost" })}>
+            Cancel
+          </Link>
+          <Button type="submit" variant="primary" disabled={saving || uploading}>
+            {saving ? <Spinner className="h-3.5 w-3.5" /> : <PlusIcon className="h-3.5 w-3.5" />}
+            {saving ? "Saving…" : mode === "create" ? "Add Project" : "Save Changes"}
+          </Button>
+        </div>
       </div>
     </form>
   );

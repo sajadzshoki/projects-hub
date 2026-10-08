@@ -60,9 +60,11 @@ export default function ProjectCard({
         >
           {project.title}
         </Link>
-        <p className="line-clamp-2 break-words text-xs leading-relaxed text-muted">
-          {project.description}
-        </p>
+        {project.description && (
+          <p className="line-clamp-2 break-words text-xs leading-relaxed text-muted">
+            {project.description}
+          </p>
+        )}
 
         <div className="flex flex-wrap items-center gap-2">
           <StatusBadge status={project.status} />

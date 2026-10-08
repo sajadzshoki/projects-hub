@@ -131,10 +131,9 @@ export default async function ProjectDetailPage({ params }: PageProps) {
               </span>
             </div>
 
-            {/* ── Description ──────────────────────────────────────────────── */}
-            <p className="break-words text-sm leading-relaxed text-text/90">
-              {project.description}
-            </p>
+            {project.description && (
+              <p className="break-words text-sm leading-relaxed text-text/90">{project.description}</p>
+            )}
 
             <TagList tags={project.tags} />
 

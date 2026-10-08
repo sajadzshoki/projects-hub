@@ -1,4 +1,9 @@
 import { ObjectId, type Collection, type WithId } from "mongodb";
+import {
+  CHECKLIST_DEFAULTS_VERSION,
+  defaultChecklist,
+  mergeDefaultChecklist,
+} from "./checklist";
 import { getDb } from "./db";
 import type { ChecklistItem, Project } from "./types";
 import type { ProjectInput } from "./validation";
@@ -17,6 +22,8 @@ export interface ProjectDoc {
   projectType: ProjectType;
   tags: string[];
   checklist?: ChecklistItem[];
+  /** Set after the default checklist has been applied. Missing means "not yet". */
+  checklistDefaultsVersion?: number;
   favorite: boolean;
   notes?: string;
   aiDocumentation?: string;
@@ -37,7 +44,7 @@ function serialize(doc: WithId<ProjectDoc>): Project {
   return {
     id: doc._id.toHexString(),
     title: doc.title,
-    description: doc.description,
+    description: doc.description ?? "",
     coverImage: doc.coverImage ?? null,
     projectUrl: doc.projectUrl ?? null,
     githubUrl: doc.githubUrl ?? null,
@@ -63,20 +70,65 @@ function clean(input: ProjectInput): Omit<ProjectDoc, "_id" | "createdAt" | "upd
   return out as Omit<ProjectDoc, "_id" | "createdAt" | "updatedAt">;
 }
 
+/**
+ * Adds the default checklist once per project. Later deletes stay deleted,
+ * and `updatedAt` is left alone so the dashboard order does not jump.
+ */
+async function applyDefaultChecklists(docs: WithId<ProjectDoc>[]): Promise<WithId<ProjectDoc>[]> {
+  const pending = docs.filter(
+    (doc) => (doc.checklistDefaultsVersion ?? 0) < CHECKLIST_DEFAULTS_VERSION
+  );
+  if (pending.length === 0) return docs;
+
+  const collection = await projects();
+  const merged = new Map<string, ChecklistItem[]>();
+  await collection.bulkWrite(
+    pending.map((doc) => {
+      const checklist = mergeDefaultChecklist(doc.checklist);
+      merged.set(doc._id.toHexString(), checklist);
+      return {
+        updateOne: {
+          filter: { _id: doc._id },
+          update: {
+            $set: { checklist, checklistDefaultsVersion: CHECKLIST_DEFAULTS_VERSION },
+          },
+        },
+      };
+    })
+  );
+
+  return docs.map((doc) => {
+    const checklist = merged.get(doc._id.toHexString());
+    if (!checklist) return doc;
+    return { ...doc, checklist, checklistDefaultsVersion: CHECKLIST_DEFAULTS_VERSION };
+  });
+}
+
 export async function listProjects(): Promise<Project[]> {
-  const docs = await (await projects()).find({}).sort({ updatedAt: -1 }).toArray();
+  const docs = await applyDefaultChecklists(
+    await (await projects()).find({}).sort({ updatedAt: -1 }).toArray()
+  );
   return docs.map(serialize);
 }
 
 export async function getProject(id: string): Promise<Project | null> {
   if (!isValidId(id)) return null;
   const doc = await (await projects()).findOne({ _id: new ObjectId(id) });
-  return doc ? serialize(doc) : null;
+  if (!doc) return null;
+  const [prepared] = await applyDefaultChecklists([doc]);
+  return serialize(prepared);
 }
 
 export async function createProject(input: ProjectInput): Promise<Project> {
   const now = new Date();
-  const doc: ProjectDoc = { ...clean(input), _id: new ObjectId(), createdAt: now, updatedAt: now };
+  const checklist = input.checklist.length > 0 ? input.checklist : defaultChecklist();
+  const doc: ProjectDoc = {
+    ...clean({ ...input, checklist }),
+    checklistDefaultsVersion: CHECKLIST_DEFAULTS_VERSION,
+    _id: new ObjectId(),
+    createdAt: now,
+    updatedAt: now,
+  };
   await (await projects()).insertOne(doc);
   return serialize(doc);
 }

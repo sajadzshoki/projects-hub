@@ -22,7 +22,7 @@ interface FieldProps {
 /** Label + control + error message, one consistent layout for every form field. */
 export function Field({ label, hint, error, required, children, className }: FieldProps) {
   return (
-    <div className={cn("block", className)}>
+    <div className={cn("block", className)} data-invalid={error ? "true" : undefined}>
       <label className="block">
         <span className="mb-1.5 flex items-baseline justify-between gap-2">
           <span className="text-xs font-medium text-text">
