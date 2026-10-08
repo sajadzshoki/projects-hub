@@ -54,6 +54,7 @@ export default function ProjectForm({ mode, initial }: ProjectFormProps) {
     () => TAG_SUGGESTIONS.filter((tag) => !tags.includes(tag)).slice(0, 8),
     [tags]
   );
+  const sitePreviewUrl = /^https?:\/\/\S+\.\S+/.test(projectUrl.trim()) ? projectUrl.trim() : "";
 
   const cancelHref = initial ? `/projects/${initial.id}` : "/projects";
 
@@ -184,13 +185,19 @@ export default function ProjectForm({ mode, initial }: ProjectFormProps) {
         <h2 className={sectionHeading}>Cover image</h2>
         <Field
           label="Upload or paste a URL"
-          hint={`JPG · PNG · WebP · max ${MAX_UPLOAD_MB} MB`}
+          hint={`Cover is read from the project website. This is only a fallback. JPG · PNG · WebP · max ${MAX_UPLOAD_MB} MB`}
           error={errors.coverImage}
         >
           <div className="space-y-2.5">
-            {coverImage && (
+            {(coverImage || sitePreviewUrl) && (
               <div className="w-full max-w-sm overflow-hidden rounded-lg border border-border">
-                <CoverImage src={coverImage} alt="Cover preview" title={title || "Preview"} className="aspect-video" />
+                <CoverImage
+                  src={coverImage || null}
+                  siteUrl={sitePreviewUrl || null}
+                  alt="Cover preview"
+                  title={title || "Preview"}
+                  className="aspect-video"
+                />
               </div>
             )}
             <div className="flex flex-wrap items-center gap-2">

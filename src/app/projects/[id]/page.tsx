@@ -54,6 +54,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
         <article className="mt-4 overflow-hidden rounded-xl border border-border bg-surface">
           <CoverImage
             src={project.coverImage}
+            siteUrl={project.projectUrl}
             alt={`Cover for ${project.title}`}
             title={project.title}
             className="aspect-[21/9] border-b border-border"

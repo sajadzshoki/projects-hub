@@ -37,6 +37,7 @@ export default function ProjectCard({
         <Link href={detailHref} aria-label={`Open ${project.title}`} className="block">
           <CoverImage
             src={project.coverImage}
+            siteUrl={project.projectUrl}
             alt=""
             title={project.title}
             className="aspect-video border-b border-border"
